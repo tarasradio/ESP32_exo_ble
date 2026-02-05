@@ -207,70 +207,71 @@ void taskSystemMonitor(void *pvParameters) {
         display.setTextSize(1);
         display.setTextColor(SSD1306_WHITE);
         
-        // Строка 1: Углы моторов
-        display.setCursor(0, 0);
-        float display_left, display_right;
-        int queueSize = uxQueueMessagesWaiting(dataPairQueue);
-        
-        if (local_left_errors.axis_error)
-            display.printf("L:A:%xM:%xE:%xC:%x ", local_left_errors.axis_error, local_left_errors.motor_error, local_left_errors.encoder_error, local_left_errors.controller_error);
-        else
-            display.printf("L:%.1f ", local_left_angle);
-        if (local_right_errors.axis_error)
-            display.printf("R:A:%xM:%xE:%xC:%x ", local_right_errors.axis_error, local_right_errors.motor_error, local_right_errors.encoder_error, local_right_errors.controller_error);
-        else
-            display.printf("R:%.1f ", local_right_angle);
-        
-        // Строка 2: Напряжение батареи и процент
-        display.setCursor(0, 12);
-        display.printf("Batt:%.2fV", battery_voltage);
-        display.setCursor(72, 12);
-        display.printf("Bat:%d%%", local_battery_percent);
-        
-        // Строка 3: Статус записи и очередь
-        display.setCursor(0, 24);
-        display.printf("Rec:%s Q:%d/%d", recording_is_run ? "ON" : "OFF", queueSize, DATA_PAIR_QUEUE_SIZE);
-        
-        // Строка 4: BLE статус и длительность записи
-        display.setCursor(0, 36);
-        
-        // Получаем BLE статус с защитой мьютексом
-        // if (xSemaphoreTake(xBLEMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
-        //     local_ble_connected = ble_connected;
-        //     strncpy(local_ble_address, (char*)ble_client_address, 31);
-        //     local_ble_address[31] = '\0';
-        //     strncpy(local_ble_command, (char*)ble_last_command, 31);
-        //     local_ble_command[31] = '\0';
-        //     xSemaphoreGive(xBLEMutex);
-        // }
-        
-        display.printf("BLE:%s", local_ble_connected ? "CON" : "DIS");
-
-        display.setCursor(48, 36);
-        if (local_recording_is_run || local_recording_duration > 0) {
-            display.printf("Time:%s", formatTime(local_recording_duration).c_str());
+        if (local_left_errors.axis_error || local_right_errors.axis_error) {
+            display.setCursor(0, 0);
+            display.printf("L:A:%xM:%xE:%xC:%x", local_left_errors.axis_error, local_left_errors.motor_error, local_left_errors.encoder_error, local_left_errors.controller_error);
+            display.setCursor(0, 12);
+            display.printf("R:A:%xM:%xE:%xC:%x", local_right_errors.axis_error, local_right_errors.motor_error, local_right_errors.encoder_error, local_right_errors.controller_error);
         } else {
-            display.print("Time:00:00");
-        }
-        
-        // Строка 5: Имя файла (обрезаем если слишком длинное)
-        display.setCursor(0, 48);
-
-        if (strlen(local_filename) > 0) {
-            // Отображаем только имя файла без расширения, обрезаем до 16 символов
-            char short_name[17] = {0};
-            char* dot_pos = strchr(local_filename, '.');
-            if (dot_pos != NULL) {
-                int len = min((int)(dot_pos - local_filename), 16);
-                strncpy(short_name, local_filename, len);
-                short_name[len] = '\0';
+            // Строка 1: Углы моторов
+            display.setCursor(0, 0);
+            float display_left, display_right;
+            int queueSize = uxQueueMessagesWaiting(dataPairQueue);
+            
+            
+            display.printf("L:%.1f R:%.1f", display_left, display_right);
+            
+            // Строка 2: Напряжение батареи и процент
+            display.setCursor(0, 12);
+            display.printf("Batt:%.2fV", battery_voltage);
+            display.setCursor(72, 12);
+            display.printf("Bat:%d%%", local_battery_percent);
+            
+            // Строка 3: Статус записи и очередь
+            display.setCursor(0, 24);
+            display.printf("Rec:%s Q:%d/%d", recording_is_run ? "ON" : "OFF", queueSize, DATA_PAIR_QUEUE_SIZE);
+            
+            // Строка 4: BLE статус и длительность записи
+            display.setCursor(0, 36);
+            
+            // Получаем BLE статус с защитой мьютексом
+            // if (xSemaphoreTake(xBLEMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+            //     local_ble_connected = ble_connected;
+            //     strncpy(local_ble_address, (char*)ble_client_address, 31);
+            //     local_ble_address[31] = '\0';
+            //     strncpy(local_ble_command, (char*)ble_last_command, 31);
+            //     local_ble_command[31] = '\0';
+            //     xSemaphoreGive(xBLEMutex);
+            // }
+            
+            display.printf("BLE:%s", local_ble_connected ? "CON" : "DIS");
+    
+            display.setCursor(48, 36);
+            if (local_recording_is_run || local_recording_duration > 0) {
+                display.printf("Time:%s", formatTime(local_recording_duration).c_str());
             } else {
-                strncpy(short_name, local_filename, 16);
-                short_name[16] = '\0';
+                display.print("Time:00:00");
             }
-            display.printf("File:%s", short_name);
-        } else {
-            display.print("File:---");
+            
+            // Строка 5: Имя файла (обрезаем если слишком длинное)
+            display.setCursor(0, 48);
+    
+            if (strlen(local_filename) > 0) {
+                // Отображаем только имя файла без расширения, обрезаем до 16 символов
+                char short_name[17] = {0};
+                char* dot_pos = strchr(local_filename, '.');
+                if (dot_pos != NULL) {
+                    int len = min((int)(dot_pos - local_filename), 16);
+                    strncpy(short_name, local_filename, len);
+                    short_name[len] = '\0';
+                } else {
+                    strncpy(short_name, local_filename, 16);
+                    short_name[16] = '\0';
+                }
+                display.printf("File:%s", short_name);
+            } else {
+                display.print("File:---");
+            }
         }
         
         display.display();
