@@ -185,6 +185,15 @@ typedef struct
     uint32_t encoder_error;
     uint32_t controller_error;
     uint32_t sensorless_error;
+    uint32_t axis_error;
+} ODriveErrors;
+
+typedef struct
+{
+    uint64_t motor_error;
+    uint32_t encoder_error;
+    uint32_t controller_error;
+    uint32_t sensorless_error;
     ODriveHeartbeat heartbeat;
     ODriveEncoderCount encoder_count;
     ODriveEncoderEstimates encoder_estimates;
@@ -192,6 +201,7 @@ typedef struct
     ODriveIq iq;
     float vbus_voltage;
     ODriveUpdates updates;
+    ODriveErrors last_errors;
 
     void (*state_transition_callback)(
         uint8_t axis_id, ODriveAxisState new_state, ODriveAxisState old_state, void *context);

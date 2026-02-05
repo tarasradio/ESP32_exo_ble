@@ -27,6 +27,8 @@ void taskSystemMonitor(void *pvParameters) {
     bool local_recording_is_run;
     float local_left_angle = 0;
     float local_right_angle = 0;
+    ODriveErrors local_left_errors = {0};
+    ODriveErrors local_right_errors = {0};
 
     // static uint8_t last_sent_battery = 255;
     // static String last_sent_time = "";
@@ -99,6 +101,9 @@ void taskSystemMonitor(void *pvParameters) {
         if (xSemaphoreTake(xOdriveMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
             local_left_angle = MOTOR_ANGLE_TO_DEG(axes[1].encoder_estimates.position);
             local_right_angle = -MOTOR_ANGLE_TO_DEG(axes[0].encoder_estimates.position);
+
+            local_left_errors = axes[1].last_errors;
+            local_right_errors = axes[0].last_errors;
             xSemaphoreGive(xOdriveMutex);
         }
         
@@ -207,15 +212,14 @@ void taskSystemMonitor(void *pvParameters) {
         float display_left, display_right;
         int queueSize = uxQueueMessagesWaiting(dataPairQueue);
         
-        if (xSemaphoreTake(xOdriveMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
-            display_left = MOTOR_ANGLE_TO_DEG(axes[1].encoder_estimates.position);
-            display_right = -MOTOR_ANGLE_TO_DEG(axes[0].encoder_estimates.position);
-            xSemaphoreGive(xOdriveMutex);
-        } else {
-            display_left = 0;
-            display_right = 0;
-        }
-        display.printf("L:%.1f R:%.1f", display_left, display_right);
+        if (local_left_errors.axis_error)
+            display.printf("L:A:%xM:%xE:%xC:%x ", local_left_errors.axis_error, local_left_errors.motor_error, local_left_errors.encoder_error, local_left_errors.controller_error);
+        else
+            display.printf("L:%.1f ", local_left_angle);
+        if (local_right_errors.axis_error)
+            display.printf("R:A:%xM:%xE:%xC:%x ", local_right_errors.axis_error, local_right_errors.motor_error, local_right_errors.encoder_error, local_right_errors.controller_error);
+        else
+            display.printf("R:%.1f ", local_right_angle);
         
         // Строка 2: Напряжение батареи и процент
         display.setCursor(0, 12);

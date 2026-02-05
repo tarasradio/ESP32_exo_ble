@@ -32,6 +32,45 @@ void taskMotorControl(void *param)
         // odrive_send_get_command(0, ODRIVE_CMD_GET_ENCODER_ESTIMATES);
         // odrive_send_get_command(1, ODRIVE_CMD_GET_ENCODER_ESTIMATES);
 
+        bool errors = false;
+        bool errors_read = true;
+        for (int i = 0; i < 2; i++)
+        {
+            if (axes[i].heartbeat.axis_error) {
+                display.printf("E:M%d;Axis:%d\n", i, axes[i].heartbeat.axis_error);
+                errors = true;
+            }
+            if (axes[i].heartbeat.motor_error_flag) {
+                odrive_send_get_command(i, ODRIVE_CMD_GET_MOTOR_ERROR);
+                errors = true;
+                if (!axes[i].motor_error)
+                    errors_read = false;
+            }
+            if (axes[i].heartbeat.encoder_error_flag) {
+                odrive_send_get_command(i, ODRIVE_CMD_GET_ENCODER_ERROR);
+                errors = true;
+                if (!axes[i].motor_error)
+                    errors_read = false;
+            }
+            if (axes[i].heartbeat.controller_error_flag) {
+                odrive_send_get_command(i, ODRIVE_CMD_GET_CONTROLLER_ERROR);
+                errors = true;
+                if (!axes[i].motor_error)
+                    errors_read = false;
+            }
+        }
+        if (errors && errors_read) {
+            for (int i = 0; i < 2; i++)
+            {
+                axes[i].last_errors.axis_error = axes[i].heartbeat.axis_error;
+                axes[i].last_errors.controller_error = axes[i].controller_error;
+                axes[i].last_errors.encoder_error = axes[i].encoder_error;
+                axes[i].last_errors.motor_error = axes[i].motor_error;
+                axes[i].last_errors.sensorless_error = axes[i].sensorless_error;
+                odrive_send_get_command(i, ODRIVE_CMD_CLEAR_ERRORS);
+            }   
+        }
+
         float angle_R = -MOTOR_ANGLE_TO_RAD(axes[0].encoder_estimates.position);
         float angle_L = MOTOR_ANGLE_TO_RAD(axes[1].encoder_estimates.position);
 
