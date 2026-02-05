@@ -48,13 +48,13 @@ void taskMotorControl(void *param)
             if (axes[i].heartbeat.encoder_error_flag) {
                 odrive_send_get_command(i, ODRIVE_CMD_GET_ENCODER_ERROR);
                 errors = true;
-                if (!axes[i].motor_error)
+                if (!axes[i].encoder_error)
                     errors_read = false;
             }
             if (axes[i].heartbeat.controller_error_flag) {
                 odrive_send_get_command(i, ODRIVE_CMD_GET_CONTROLLER_ERROR);
                 errors = true;
-                if (!axes[i].motor_error)
+                if (!axes[i].controller_error)
                     errors_read = false;
             }
         }
