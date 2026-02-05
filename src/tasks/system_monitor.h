@@ -102,8 +102,10 @@ void taskSystemMonitor(void *pvParameters) {
             local_left_angle = MOTOR_ANGLE_TO_DEG(axes[1].encoder_estimates.position);
             local_right_angle = -MOTOR_ANGLE_TO_DEG(axes[0].encoder_estimates.position);
 
-            local_left_errors = axes[1].last_errors;
-            local_right_errors = axes[0].last_errors;
+            if (!local_left_errors.axis_error)
+                local_left_errors = axes[1].last_errors;
+            if (!local_right_errors.axis_error)
+                local_right_errors = axes[0].last_errors;
             xSemaphoreGive(xOdriveMutex);
         }
         
@@ -210,7 +212,7 @@ void taskSystemMonitor(void *pvParameters) {
         if (local_left_errors.axis_error || local_right_errors.axis_error) {
             display.setCursor(0, 0);
             display.printf("L:A:%xM:%xE:%xC:%x", local_left_errors.axis_error, local_left_errors.motor_error, local_left_errors.encoder_error, local_left_errors.controller_error);
-            display.setCursor(0, 12);
+            display.setCursor(0, 24);
             display.printf("R:A:%xM:%xE:%xC:%x", local_right_errors.axis_error, local_right_errors.motor_error, local_right_errors.encoder_error, local_right_errors.controller_error);
         } else {
             // Строка 1: Углы моторов
