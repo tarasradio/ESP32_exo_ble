@@ -102,9 +102,9 @@ void taskSystemMonitor(void *pvParameters) {
             local_left_angle = MOTOR_ANGLE_TO_DEG(axes[1].encoder_estimates.position);
             local_right_angle = -MOTOR_ANGLE_TO_DEG(axes[0].encoder_estimates.position);
 
-            if (!local_left_errors.axis_error)
+            if (axes[1].last_errors.axis_error)
                 local_left_errors = axes[1].last_errors;
-            if (!local_right_errors.axis_error)
+            if (axes[0].last_errors.axis_error)
                 local_right_errors = axes[0].last_errors;
             xSemaphoreGive(xOdriveMutex);
         }
