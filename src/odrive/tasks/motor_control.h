@@ -37,7 +37,6 @@ void taskMotorControl(void *param)
         for (int i = 0; i < 2; i++)
         {
             if (axes[i].heartbeat.axis_error) {
-                display.printf("E:M%d;Axis:%d\n", i, axes[i].heartbeat.axis_error);
                 errors = true;
             }
             if (axes[i].heartbeat.motor_error_flag) {
