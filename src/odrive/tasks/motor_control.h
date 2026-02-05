@@ -59,6 +59,12 @@ void taskMotorControl(void *param)
                     errors_read = false;
             }
         }
+        if (!errors) {
+            for (int i = 0; i < 2; i++)
+            {
+                axes[i].last_errors = { 0 };
+            }
+        }
         if (errors && errors_read) {
             for (int i = 0; i < 2; i++)
             {
